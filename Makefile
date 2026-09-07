@@ -1,22 +1,25 @@
 CC      ?= cc
 CFLAGS  ?= -O2 -Wall -Wextra
-PKGS     = gtk+-3.0 webkit2gtk-4.1
-CPPFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDLIBS   += $(shell pkg-config --libs $(PKGS))
+PKGS    := gtk+-3.0 webkit2gtk-4.1 md4c-html
+CFLAGS  += -std=c11 -Wall -Wextra $(shell pkg-config --cflags $(PKGS))
+LDLIBS  += $(shell pkg-config --libs $(PKGS))
 
-.PHONY: all clean test
+PREFIX = /usr/local
 
-all: mdlive test_render
+.PHONY: all install uninstall clean
 
-mdlive: mdlive.c render.c render.h
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ mdlive.c render.c $(LDLIBS)
+all: mdlive
 
-test_render: test_render.c render.c render.h
-	$(CC) $(CFLAGS) $(shell pkg-config --cflags glib-2.0) \
-		-o $@ test_render.c render.c $(shell pkg-config --libs glib-2.0)
+mdlive: mdlive.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDLIBS)
 
-test: test_render
-	./test_render sample.md
+install: all
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f mdlive ${DESTDIR}${PREFIX}/bin
+	chmod 755 ${DESTDIR}${PREFIX}/bin/mdlive
+
+uninstall:
+	rm -f ${DESTDIR}${PREFIX}/bin/mdlive
 
 clean:
-	rm -f mdlive test_render
+	rm -f mdlive
